@@ -3,29 +3,13 @@ package me.zhangls.loadmore.containner;
 import android.view.View;
 import android.widget.AbsListView;
 
-/**
- * Created by Administrator on 2015/8/27.
- */
 public interface LoadMoreContainer {
-
     public void setShowLoadingForFirstPage(boolean showLoading);
-
-
     public void setAutoLoadMore(boolean autoLoadMore);
-
-
     public void setOnScrollListener(AbsListView.OnScrollListener l);
-
-
     public void setLoadMoreView(View view);
-
-
     public void setLoadMoreUIHandler(LoadMoreUIHandler handler);
-
-
     public void setLoadMoreHandler(LoadMoreHandler handler);
-
-
     /**
      * When data has loaded
      *
@@ -33,8 +17,6 @@ public interface LoadMoreContainer {
      * @param hasMore
      */
     public void loadMoreFinish(boolean emptyResult, boolean hasMore);
-
-
     /**
      * When something unexpected happened while loading the data
      *
