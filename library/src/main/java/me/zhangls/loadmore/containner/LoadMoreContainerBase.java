@@ -8,21 +8,19 @@ import android.widget.AbsListView;
 import android.widget.LinearLayout;
 
 /**
- * @author huqiu.lhq
+ * @author zhangls
  */
-public abstract class LoadMoreContainerBase extends LinearLayout implements LoadMoreContainer {
+public abstract class LoadMoreContainerBase extends LinearLayout {
 
     private AbsListView.OnScrollListener mOnScrollListener;
-    private LoadMoreUIHandler mLoadMoreUIHandler;
-    private LoadMoreHandler mLoadMoreHandler;
+    private LoadMoreUIListener mLoadMoreUIListener;
+    private LoadMoreListener mLoadMoreListener;
 
     private boolean mIsLoading;
-    private boolean mHasMore = false;
+    private boolean mHasMore = true;
     private boolean mAutoLoadMore = true;
     private boolean mLoadError = false;
 
-    private boolean mListEmpty = true;
-    private boolean mShowLoadingForFirstPage = false;
     private View mFooterView;
 
     private AbsListView mAbsListView;
@@ -44,19 +42,11 @@ public abstract class LoadMoreContainerBase extends LinearLayout implements Load
         init();
     }
 
-    /**
-     * @deprecated It's totally wrong. Use {@link #useDefaultFooter} instead.
-     */
-    @Deprecated
-    public void useDefaultHeader() {
-        useDefaultFooter();
-    }
-
     public void useDefaultFooter() {
         LoadMoreDefaultFooterView footerView = new LoadMoreDefaultFooterView(getContext());
         footerView.setVisibility(GONE);
         setLoadMoreView(footerView);
-        setLoadMoreUIHandler(footerView);
+        mLoadMoreUIListener = footerView;
     }
 
     private void init() {
@@ -65,17 +55,14 @@ public abstract class LoadMoreContainerBase extends LinearLayout implements Load
         }
         mAbsListView.setOnScrollListener(new AbsListView.OnScrollListener() {
             private boolean mIsEnd = false;
+
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (null != mOnScrollListener) {
                     mOnScrollListener.onScrollStateChanged(view, scrollState);
                 }
-                if (scrollState == SCROLL_STATE_IDLE) {
-                    if (mIsEnd) {
-                        onReachBottom();
-                    }
-                }
             }
+
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
                 if (null != mOnScrollListener) {
@@ -83,7 +70,10 @@ public abstract class LoadMoreContainerBase extends LinearLayout implements Load
                 }
                 Log.d("LoadMoreContainerBase", "firstVisibleItem:" + firstVisibleItem + "," +
                         "firstVisibleItem:" + visibleItemCount + ",totalItemCount:" + totalItemCount);
-                mIsEnd = firstVisibleItem + visibleItemCount + preCount>= totalItemCount - 1;
+                mIsEnd = firstVisibleItem > 0 && totalItemCount > 0 && firstVisibleItem + visibleItemCount + preCount >= totalItemCount - 1;
+                if (mIsEnd) {
+                    onReachBottom();
+                }
             }
         });
     }
@@ -94,15 +84,15 @@ public abstract class LoadMoreContainerBase extends LinearLayout implements Load
             return;
         }
         // no more content and also not load for first page
-        if (!mHasMore && !(mListEmpty && mShowLoadingForFirstPage)) {
+        if (!mHasMore) {
             return;
         }
         mIsLoading = true;
-        if (mLoadMoreUIHandler != null) {
-            mLoadMoreUIHandler.onLoading(this);
+        if (mLoadMoreUIListener != null) {
+            mLoadMoreUIListener.onLoading(this);
         }
-        if (null != mLoadMoreHandler) {
-            mLoadMoreHandler.onLoadMore(this);
+        if (null != mLoadMoreListener) {
+            mLoadMoreListener.onLoadMore();
         }
     }
 
@@ -115,31 +105,27 @@ public abstract class LoadMoreContainerBase extends LinearLayout implements Load
             tryToPerformLoadMore();
         } else {
             if (mHasMore) {
-                mLoadMoreUIHandler.onWaitToLoadMore(this);
+                mLoadMoreUIListener.onWaitToLoadMore(this);
             }
         }
     }
 
-    @Override
-    public void setShowLoadingForFirstPage(boolean showLoading) {
-        mShowLoadingForFirstPage = showLoading;
-    }
-
-    @Override
     public void setAutoLoadMore(boolean autoLoadMore) {
         mAutoLoadMore = autoLoadMore;
+    }
+
+    public void setHasMore(boolean mHasMore) {
+        this.mHasMore = mHasMore;
     }
 
     public void setPreCount(int preCount) {
         this.preCount = preCount;
     }
 
-    @Override
     public void setOnScrollListener(AbsListView.OnScrollListener l) {
         mOnScrollListener = l;
     }
 
-    @Override
     public void setLoadMoreView(View view) {
         // has not been initialized
         if (mAbsListView == null) {
@@ -161,43 +147,36 @@ public abstract class LoadMoreContainerBase extends LinearLayout implements Load
         addFooterView(view);
     }
 
-    @Override
-    public void setLoadMoreUIHandler(LoadMoreUIHandler handler) {
-        mLoadMoreUIHandler = handler;
-    }
-
-    @Override
-    public void setLoadMoreHandler(LoadMoreHandler handler) {
-        mLoadMoreHandler = handler;
+    public void setLoadMoreListener(LoadMoreListener handler) {
+        mLoadMoreListener = handler;
     }
 
     /**
      * page has loaded
-     *
-     * @param emptyResult
-     * @param hasMore
      */
-    @Override
-    public void loadMoreFinish(boolean emptyResult, boolean hasMore) {
+    public void loadMoreFinish() {
         mLoadError = false;
-        mListEmpty = emptyResult;
         mIsLoading = false;
-        mHasMore = hasMore;
-        if (mLoadMoreUIHandler != null) {
-            mLoadMoreUIHandler.onLoadFinish(this, emptyResult, hasMore);
+        if (mLoadMoreUIListener != null) {
+            if (mHasMore) {
+                mLoadMoreUIListener.onLoading(this);
+            } else {
+                mLoadMoreUIListener.onLoadFinish(this);
+            }
         }
     }
 
-    @Override
     public void loadMoreError(int errorCode, String errorMessage) {
         mIsLoading = false;
         mLoadError = true;
-        if (mLoadMoreUIHandler != null) {
-            mLoadMoreUIHandler.onLoadError(this, errorCode, errorMessage);
+        if (mLoadMoreUIListener != null) {
+            mLoadMoreUIListener.onLoadError(this, errorCode, errorMessage);
         }
     }
 
     protected abstract void addFooterView(View view);
+
     protected abstract void removeFooterView(View view);
+
     protected abstract AbsListView retrieveAbsListView();
 }

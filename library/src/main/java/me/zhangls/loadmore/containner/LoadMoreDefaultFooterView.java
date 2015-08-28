@@ -6,7 +6,7 @@ import android.view.LayoutInflater;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class LoadMoreDefaultFooterView extends RelativeLayout implements LoadMoreUIHandler {
+public class LoadMoreDefaultFooterView extends RelativeLayout implements LoadMoreUIListener {
 
 
     private TextView mTextView;
@@ -35,36 +35,28 @@ public class LoadMoreDefaultFooterView extends RelativeLayout implements LoadMor
 
 
     @Override
-    public void onLoading(LoadMoreContainer container) {
+    public void onLoading(LoadMoreContainerBase container) {
         setVisibility(VISIBLE);
         mTextView.setText("加载中...");
     }
 
 
     @Override
-    public void onLoadFinish(LoadMoreContainer container, boolean empty, boolean hasMore) {
-        if (!hasMore) {
-            setVisibility(VISIBLE);
-            if (empty) {
-                mTextView.setText("数据为空");
-            } else {
-                mTextView.setText("全部数据加载完毕");
-            }
-        } else {
-            setVisibility(INVISIBLE);
-        }
+    public void onLoadFinish(LoadMoreContainerBase container) {
+        setVisibility(VISIBLE);
+        mTextView.setText("全部数据加载完毕");
     }
 
 
     @Override
-    public void onWaitToLoadMore(LoadMoreContainer container) {
+    public void onWaitToLoadMore(LoadMoreContainerBase container) {
         setVisibility(VISIBLE);
         mTextView.setText("点击加载更多");
     }
 
 
     @Override
-    public void onLoadError(LoadMoreContainer container, int errorCode, String errorMessage) {
+    public void onLoadError(LoadMoreContainerBase container, int errorCode, String errorMessage) {
         mTextView.setText("加载失败,点击重试");
     }
 }

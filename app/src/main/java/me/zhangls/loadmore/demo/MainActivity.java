@@ -1,9 +1,8 @@
 package me.zhangls.loadmore.demo;
 
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -11,8 +10,7 @@ import java.util.List;
 
 import me.zhangls.adapter.helper.BaseAdapterHelper;
 import me.zhangls.adapter.helper.QuickAdapter;
-import me.zhangls.loadmore.containner.LoadMoreContainer;
-import me.zhangls.loadmore.containner.LoadMoreHandler;
+import me.zhangls.loadmore.containner.LoadMoreListener;
 import me.zhangls.loadmore.containner.LoadMoreListViewContainer;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,9 +29,7 @@ public class MainActivity extends AppCompatActivity {
 
         loadMoreListViewContainer = (LoadMoreListViewContainer) findViewById(R.id.load_more);
         loadMoreListViewContainer.useDefaultFooter();
-        loadMoreListViewContainer.setPreCount(10);
-        loadMoreListViewContainer.setShowLoadingForFirstPage(true);
-
+//        loadMoreListViewContainer.setPreCount(10);
 
         listView = (ListView) findViewById(R.id.listview);
         adapter = new QuickAdapter<String>(this, R.layout.item_list) {
@@ -45,27 +41,15 @@ public class MainActivity extends AppCompatActivity {
         adapter.addAll(makeDatas(20, 0));
 
         listView.setAdapter(adapter);
-        loadMoreListViewContainer.setLoadMoreHandler(new LoadMoreHandler() {
+        loadMoreListViewContainer.setLoadMoreListener(new LoadMoreListener() {
             @Override
-            public void onLoadMore(LoadMoreContainer loadMoreContainer) {
-                count++;
-                if (count > 3) {
-                    loadMoreListViewContainer.loadMoreFinish(false, false);
-                } else {
-                    listView.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            adapter.addAll(makeDatas(20, 20 * count));
-                            loadMoreListViewContainer.loadMoreFinish(false, true);
-                        }
-                    }, 1000);
-                }
-
+            public void onLoadMore() {
+                new GetDataTask().execute();
             }
+
         });
-
-
     }
+
 
     public List<String> makeDatas(int size, int start) {
         List<String> list = new ArrayList<>();
@@ -75,4 +59,30 @@ public class MainActivity extends AppCompatActivity {
         return list;
     }
 
+    private class GetDataTask extends AsyncTask<Void, Void, List<String>> {
+
+
+        @Override
+        protected List<String> doInBackground(Void... params) {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+
+            }
+            return makeDatas(20, 20 * ++count);
+        }
+
+
+        @Override
+        protected void onPostExecute(List<String> result) {
+
+            adapter.addAll(result);
+
+            if (count >= size) {
+                loadMoreListViewContainer.setHasMore(false);
+            }
+            loadMoreListViewContainer.loadMoreFinish();
+            super.onPostExecute(result);
+        }
+    }
 }
