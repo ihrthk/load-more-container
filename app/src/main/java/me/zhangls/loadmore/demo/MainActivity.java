@@ -19,16 +19,23 @@ public class MainActivity extends AppCompatActivity {
 
     private QuickAdapter<String> adapter;
 
+    private int count = 0;
+    private int size = 3;
+    private LoadMoreListViewContainer loadMoreListViewContainer;
+    private ListView listView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        LoadMoreListViewContainer loadMoreListViewContainer = (LoadMoreListViewContainer) findViewById(R.id.load_more);
+        loadMoreListViewContainer = (LoadMoreListViewContainer) findViewById(R.id.load_more);
         loadMoreListViewContainer.useDefaultFooter();
+        loadMoreListViewContainer.setPreCount(10);
         loadMoreListViewContainer.setShowLoadingForFirstPage(true);
 
-        final ListView listView = (ListView) findViewById(R.id.listview);
+
+        listView = (ListView) findViewById(R.id.listview);
         adapter = new QuickAdapter<String>(this, R.layout.item_list) {
             @Override
             protected void convert(BaseAdapterHelper baseAdapterHelper, String s) {
@@ -41,7 +48,19 @@ public class MainActivity extends AppCompatActivity {
         loadMoreListViewContainer.setLoadMoreHandler(new LoadMoreHandler() {
             @Override
             public void onLoadMore(LoadMoreContainer loadMoreContainer) {
-                adapter.addAll(makeDatas(20, 20));
+                count++;
+                if (count > 3) {
+                    loadMoreListViewContainer.loadMoreFinish(false, false);
+                } else {
+                    listView.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            adapter.addAll(makeDatas(20, 20 * count));
+                            loadMoreListViewContainer.loadMoreFinish(false, true);
+                        }
+                    }, 1000);
+                }
+
             }
         });
 

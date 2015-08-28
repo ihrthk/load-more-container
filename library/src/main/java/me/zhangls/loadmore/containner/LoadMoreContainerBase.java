@@ -27,6 +27,8 @@ public abstract class LoadMoreContainerBase extends LinearLayout implements Load
 
     private AbsListView mAbsListView;
 
+    private int preCount = 0;
+
     public LoadMoreContainerBase(Context context) {
         super(context);
     }
@@ -81,7 +83,7 @@ public abstract class LoadMoreContainerBase extends LinearLayout implements Load
                 }
                 Log.d("LoadMoreContainerBase", "firstVisibleItem:" + firstVisibleItem + "," +
                         "firstVisibleItem:" + visibleItemCount + ",totalItemCount:" + totalItemCount);
-                mIsEnd = firstVisibleItem + visibleItemCount >= totalItemCount - 1;
+                mIsEnd = firstVisibleItem + visibleItemCount + preCount>= totalItemCount - 1;
             }
         });
     }
@@ -126,6 +128,10 @@ public abstract class LoadMoreContainerBase extends LinearLayout implements Load
     @Override
     public void setAutoLoadMore(boolean autoLoadMore) {
         mAutoLoadMore = autoLoadMore;
+    }
+
+    public void setPreCount(int preCount) {
+        this.preCount = preCount;
     }
 
     @Override
