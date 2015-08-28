@@ -46,7 +46,6 @@ public abstract class LoadMoreContainerBase extends LinearLayout {
         LoadMoreDefaultFooterView footerView = new LoadMoreDefaultFooterView(getContext());
         footerView.setVisibility(GONE);
         setLoadMoreView(footerView);
-        mLoadMoreUIListener = footerView;
     }
 
     private void init() {
@@ -127,6 +126,12 @@ public abstract class LoadMoreContainerBase extends LinearLayout {
     }
 
     public void setLoadMoreView(View view) {
+        if (view instanceof LoadMoreUIListener) {
+            mLoadMoreUIListener = (LoadMoreUIListener) view;
+        } else {
+            mLoadMoreUIListener = null;
+        }
+
         // has not been initialized
         if (mAbsListView == null) {
             mFooterView = view;
